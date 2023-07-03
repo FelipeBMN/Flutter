@@ -17,3 +17,5 @@ which flutter
 talke to install amdroid studio 
 
 sudo apt-get install clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+open -a simulator
