@@ -44,6 +44,11 @@ class MyAppState extends ChangeNotifier {
     }
     notifyListeners();
   }
+
+  void remove(WordPair pair) {
+    favorites.remove(pair);
+    notifyListeners();
+  }
 }
 // ...
 
@@ -190,7 +195,7 @@ class BigCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: AnimatedSize(
-            duration: const Duration(microseconds: 200),
+            duration: const Duration(milliseconds: 200),
             child: MergeSemantics(
               child: Wrap(
                 children: [
@@ -212,29 +217,45 @@ class BigCard extends StatelessWidget {
 
 class Favorite extends StatelessWidget {
   const Favorite({super.key});
+
   @override
   Widget build(BuildContext context) {
     var favorites = context.watch<MyAppState>().favorites;
+    var appState = context.watch<MyAppState>();
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: ListView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 40),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "Favoritos",
-                textScaleFactor: 2,
-              )
-            ],
+          Padding(
+            padding: const EdgeInsets.all(30),
+            child: Text('You have '
+                '${appState.favorites.length} favorites:'),
           ),
-          for (var favorito in favorites)
-            ListTile(
-              title: Text("$favorito"),
-              leading: Icon(Icons.favorite),
-            )
+          Expanded(
+            child: GridView(
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 400,
+                childAspectRatio: 400 / 80,
+              ),
+              children: [
+                for (var favorito in favorites)
+                  ListTile(
+                    title: Text("$favorito"),
+                    leading: IconButton(
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        semanticLabel: 'Delete',
+                      ),
+                      color: Colors.deepPurple,
+                      onPressed: () {
+                        appState.remove(favorito);
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          )
         ],
       ),
     );
