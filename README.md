@@ -26,3 +26,7 @@ where.exe flutter dart
 flutter doctor
 flutter doctor --android-licenses
 flutter doctor
+
+## New APP
+ctrl + shift + P
+flutter New Project
