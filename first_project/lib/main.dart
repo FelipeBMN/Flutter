@@ -1,25 +1,26 @@
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import './Bigcard.dart';
 
 void main() {
-  // Informa ao Flutter para executar o app definido em MyApp.
-  runApp(const MyApp());
+  // Informa ao Flutter para executar o app definido em Urban_APP.
+  runApp(const Urban_APP());
 }
 
-class MyApp extends StatelessWidget {
-  // MyApp configura todo o app. // Cria o estado geral (falaremos mais sobre isso depois), nomeia o app e define o tema visual e o widget "inicial", ou seja, o ponto de partida do app.
-  const MyApp({super.key});
+class Urban_APP extends StatelessWidget {
+  // Urban_APP configura todo o app. // Cria o estado geral (falaremos mais sobre isso depois), nomeia o app e define o tema visual e o widget "inicial", ou seja, o ponto de partida do app.
+  const Urban_APP({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => MyAppState(),
+      create: (context) => Urban_APPState(),
       child: MaterialApp(
-        title: 'Namer App',
+        title: 'Urbansol',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
         ),
         home: const MyHomePage(),
       ),
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyAppState extends ChangeNotifier {
+class Urban_APPState extends ChangeNotifier {
   var current = WordPair.random();
   var favorites = <WordPair>[];
 
@@ -72,6 +73,9 @@ class _MyHomePageState extends State<MyHomePage> {
       case 1:
         page = const Favorite();
         break;
+      case 2:
+        page = const MyCustomForm();
+        break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
     }
@@ -81,20 +85,27 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             SafeArea(
               child: NavigationRail(
-                indicatorColor: const Color.fromARGB(255, 155, 118, 218),
+                indicatorColor: const Color.fromARGB(255, 255, 178, 102),
                 extended: constraints.maxWidth >= 600,
                 destinations: const [
                   NavigationRailDestination(
-                    icon: Icon(Icons.home),
+                    icon: Icon(Icons.article),
                     label: Text(
-                      'Home',
+                      'Orçamento',
                       textScaleFactor: 1.3,
                     ),
                   ),
                   NavigationRailDestination(
-                    icon: Icon(Icons.favorite),
+                    icon: Icon(Icons.slideshow),
                     label: Text(
-                      'Favorites',
+                      'Apresentação',
+                      textScaleFactor: 1.3,
+                    ),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.build),
+                    label: Text(
+                      'teste',
                       textScaleFactor: 1.3,
                     ),
                   ),
@@ -109,7 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Expanded(
               child: Container(
-                color: Color.fromARGB(255, 221, 201, 255),
+                color: Color.fromARGB(100, 255, 178, 102),
                 child: page,
               ),
             ),
@@ -125,9 +136,10 @@ class GeneratorPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    var pair = appState.current;
+    const appTitle = 'Form Styling Demo';
 
+    var appState = context.watch<Urban_APPState>();
+    var pair = appState.current;
     IconData icon;
     if (appState.favorites.contains(pair)) {
       icon = Icons.favorite;
@@ -149,7 +161,7 @@ class GeneratorPage extends StatelessWidget {
                   appState.toggleFavorite();
                 },
                 style: TextButton.styleFrom(
-                  foregroundColor: Colors.deepPurple,
+                  foregroundColor: Colors.deepOrange,
                 ),
                 icon: Icon(icon),
                 label: const Text('Like'),
@@ -160,7 +172,7 @@ class GeneratorPage extends StatelessWidget {
                   appState.getNext();
                 },
                 style: TextButton.styleFrom(
-                  foregroundColor: Colors.deepPurple,
+                  foregroundColor: Colors.deepOrange,
                 ),
                 icon: const Icon(Icons.navigate_next),
                 label: const Text('Next'),
@@ -173,55 +185,13 @@ class GeneratorPage extends StatelessWidget {
   }
 }
 
-// ...
-
-class BigCard extends StatelessWidget {
-  const BigCard({
-    super.key,
-    required this.pair,
-  });
-
-  final WordPair pair;
-
-  @override
-  Widget build(BuildContext context) {
-    // final theme = Theme.of(context);
-    final theme = Theme.of(context);
-    final style = theme.textTheme.displayMedium!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
-    return Card(
-      color: theme.colorScheme.primary,
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: AnimatedSize(
-            duration: const Duration(milliseconds: 200),
-            child: MergeSemantics(
-              child: Wrap(
-                children: [
-                  Text(
-                    pair.first,
-                    style: style.copyWith(fontWeight: FontWeight.w200),
-                  ),
-                  Text(
-                    pair.second,
-                    style: style.copyWith(fontWeight: FontWeight.bold),
-                  )
-                ],
-              ),
-            )),
-      ),
-    ); // Card
-  }
-}
-
 class Favorite extends StatelessWidget {
   const Favorite({super.key});
 
   @override
   Widget build(BuildContext context) {
-    var favorites = context.watch<MyAppState>().favorites;
-    var appState = context.watch<MyAppState>();
+    var favorites = context.watch<Urban_APPState>().favorites;
+    var appState = context.watch<Urban_APPState>();
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -247,7 +217,7 @@ class Favorite extends StatelessWidget {
                         Icons.delete_outline,
                         semanticLabel: 'Delete',
                       ),
-                      color: Colors.deepPurple,
+                      color: Colors.deepOrange,
                       onPressed: () {
                         appState.remove(favorito);
                       },
@@ -256,6 +226,82 @@ class Favorite extends StatelessWidget {
               ],
             ),
           )
+        ],
+      ),
+    );
+  }
+}
+
+class MyCustomForm extends StatelessWidget {
+  const MyCustomForm({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 16),
+            child: TextFormField(
+              decoration: const InputDecoration(
+                border: UnderlineInputBorder(),
+                labelText: 'Nome Completo',
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 16),
+            child: TextFormField(
+              decoration: const InputDecoration(
+                border: UnderlineInputBorder(),
+                labelText: 'Consumo Mensal',
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 16),
+            child: TextFormField(
+              decoration: const InputDecoration(
+                border: UnderlineInputBorder(),
+                labelText: 'Localização',
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 16),
+            child: TextFormField(
+              decoration: const InputDecoration(
+                border: UnderlineInputBorder(),
+                labelText: 'Preço',
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 16),
+            child: TextFormField(
+              decoration: const InputDecoration(
+                border: UnderlineInputBorder(),
+                labelText: 'Inversor',
+              ),
+            ),
+          ),
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Wrap(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {},
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.deepOrange,
+                    ),
+                    icon: const Icon(Icons.article),
+                    label: const Text('Gerar PDF'),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -21,7 +21,7 @@ open -a simulator
 
 ## Instalação inicial para Windows
 
-    - Install Flutter SDK - Baixar arquivos
+- Install Flutter SDK - Baixar arquivos
 where.exe flutter dart
 flutter doctor
 flutter doctor --android-licenses
