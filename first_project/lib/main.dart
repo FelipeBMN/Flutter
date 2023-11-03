@@ -4,18 +4,18 @@ import 'package:provider/provider.dart';
 import './Bigcard.dart';
 
 void main() {
-  // Informa ao Flutter para executar o app definido em Urban_APP.
-  runApp(const Urban_APP());
+  // Informa ao Flutter para executar o app definido em MyApp.
+  runApp(const MyApp());
 }
 
-class Urban_APP extends StatelessWidget {
-  // Urban_APP configura todo o app. // Cria o estado geral (falaremos mais sobre isso depois), nomeia o app e define o tema visual e o widget "inicial", ou seja, o ponto de partida do app.
-  const Urban_APP({super.key});
+class MyApp extends StatelessWidget {
+  // MyApp configura todo o app. // Cria o estado geral (falaremos mais sobre isso depois), nomeia o app e define o tema visual e o widget "inicial", ou seja, o ponto de partida do app.
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => Urban_APPState(),
+      create: (context) => MyAppState(),
       child: MaterialApp(
         title: 'Urbansol',
         theme: ThemeData(
@@ -28,7 +28,9 @@ class Urban_APP extends StatelessWidget {
   }
 }
 
-class Urban_APPState extends ChangeNotifier {
+class MyAppState extends ChangeNotifier {
+  final _formKey = GlobalKey<FormState>();
+
   var current = WordPair.random();
   var favorites = <WordPair>[];
 
@@ -68,7 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Widget page;
     switch (selectedIndex) {
       case 0:
-        page = const GeneratorPage();
+        page = const MyCustomForm();
         break;
       case 1:
         page = const Favorite();
@@ -138,7 +140,7 @@ class GeneratorPage extends StatelessWidget {
   Widget build(BuildContext context) {
     const appTitle = 'Form Styling Demo';
 
-    var appState = context.watch<Urban_APPState>();
+    var appState = context.watch<MyAppState>();
     var pair = appState.current;
     IconData icon;
     if (appState.favorites.contains(pair)) {
@@ -190,8 +192,8 @@ class Favorite extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var favorites = context.watch<Urban_APPState>().favorites;
-    var appState = context.watch<Urban_APPState>();
+    var favorites = context.watch<MyAppState>().favorites;
+    var appState = context.watch<MyAppState>();
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -232,77 +234,148 @@ class Favorite extends StatelessWidget {
   }
 }
 
-class MyCustomForm extends StatelessWidget {
+// Create a Form widget.
+class MyCustomForm extends StatefulWidget {
   const MyCustomForm({super.key});
 
   @override
+  MyCustomFormState createState() {
+    return MyCustomFormState();
+  }
+}
+
+// Create a corresponding State class.
+// This class holds data related to the form.
+class MyCustomFormState extends State<MyCustomForm> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  @override
   Widget build(BuildContext context) {
-    return Form(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 16),
-            child: TextFormField(
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                labelText: 'Nome Completo',
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 16),
-            child: TextFormField(
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                labelText: 'Consumo Mensal',
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 16),
-            child: TextFormField(
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                labelText: 'Localização',
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 16),
-            child: TextFormField(
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                labelText: 'Preço',
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 16),
-            child: TextFormField(
-              decoration: const InputDecoration(
-                border: UnderlineInputBorder(),
-                labelText: 'Inversor',
-              ),
-            ),
-          ),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Wrap(
-                children: [
-                  ElevatedButton.icon(
-                    onPressed: () {},
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.deepOrange,
-                    ),
-                    icon: const Icon(Icons.article),
-                    label: const Text('Gerar PDF'),
+    return Center(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.vertical,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+                child: TextFormField(
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'Nome Completo',
                   ),
-                ],
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Campo deve ser preenchido';
+                    }
+                    return null;
+                  },
+                ),
               ),
-            ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+                child: TextFormField(
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'Consumo Mensal',
+                  ),
+                  validator: (value) {
+                    if (value == null ||
+                        value.isEmpty ||
+                        double.tryParse(value) == null) {
+                      return 'Digite apenas numero. Ex: 730';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+                child: TextFormField(
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'Localização',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Campo deve ser preenchido';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 25, vertical: 6),
+                child: TextFormField(
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'Preço',
+                    helperText: "Ex: 11250.89",
+                  ),
+                  validator: (value) {
+                    if (value != null && double.tryParse(value) == null) {
+                      return 'Digite apenas numeros. Ex: 13245.23';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 25, vertical: 6),
+                child: TextFormField(
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'Inversor',
+                    helperText: "Ex: 2x Solplanet 30k-TL-G3",
+                  ),
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 25, vertical: 6),
+                child: TextFormField(
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'Modulos:',
+                    helperText: "Ex: Quantidade,Potência,Marca",
+                  ),
+                ),
+              ),
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(40),
+                  child: Wrap(
+                    children: [
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          // Validate returns true if the form is valid, or false otherwise.
+                          if (_formKey.currentState!.validate()) {
+                            // If the form is valid, display a snackbar. In the real world,
+                            // you'd often call a server or save the information in a database.
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Processing Data')),
+                            );
+                          }
+                        },
+                        style: TextButton.styleFrom(
+                            foregroundColor: Colors.deepOrange,
+                            textStyle: const TextStyle(fontSize: 20)),
+                        icon: const Icon(Icons.article),
+                        label: const Text('PDF'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
