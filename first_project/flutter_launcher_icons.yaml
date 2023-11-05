@@ -1,0 +1,4 @@
+flutter_icons:
+  image_path: "imgs\icon.png" # Substitua pelo caminho do seu ícone de origem
+  android: true
+  ios: true

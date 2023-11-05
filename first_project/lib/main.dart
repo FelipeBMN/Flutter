@@ -1,7 +1,9 @@
+import 'package:Urbansol_App/funcoes.dart';
 import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import './Bigcard.dart';
+import 'package:printing/printing.dart';
+import 'PDFs/document.dart';
 
 void main() {
   // Informa ao Flutter para executar o app definido em MyApp.
@@ -29,28 +31,23 @@ class MyApp extends StatelessWidget {
 }
 
 class MyAppState extends ChangeNotifier {
-  final _formKey = GlobalKey<FormState>();
-
   var current = WordPair.random();
   var favorites = <WordPair>[];
 
-  void getNext() {
-    current = WordPair.random();
-    notifyListeners();
+  void _showPrintedToast(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Document printed successfully'),
+      ),
+    );
   }
 
-  void toggleFavorite() {
-    if (favorites.contains(current)) {
-      favorites.remove(current);
-    } else {
-      favorites.add(current);
-    }
-    notifyListeners();
-  }
-
-  void remove(WordPair pair) {
-    favorites.remove(pair);
-    notifyListeners();
+  void _showSharedToast(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Document shared successfully'),
+      ),
+    );
   }
 }
 // ...
@@ -73,9 +70,6 @@ class _MyHomePageState extends State<MyHomePage> {
         page = const MyCustomForm();
         break;
       case 1:
-        page = const Favorite();
-        break;
-      case 2:
         page = const MyCustomForm();
         break;
       default:
@@ -94,13 +88,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     icon: Icon(Icons.article),
                     label: Text(
                       'Orçamento',
-                      textScaleFactor: 1.3,
-                    ),
-                  ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.slideshow),
-                    label: Text(
-                      'Apresentação',
                       textScaleFactor: 1.3,
                     ),
                   ),
@@ -153,15 +140,12 @@ class GeneratorPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          BigCard(pair: pair),
           const SizedBox(height: 10),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               ElevatedButton.icon(
-                onPressed: () {
-                  appState.toggleFavorite();
-                },
+                onPressed: () {},
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.deepOrange,
                 ),
@@ -170,9 +154,7 @@ class GeneratorPage extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               ElevatedButton.icon(
-                onPressed: () {
-                  appState.getNext();
-                },
+                onPressed: () {},
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.deepOrange,
                 ),
@@ -220,9 +202,7 @@ class Favorite extends StatelessWidget {
                         semanticLabel: 'Delete',
                       ),
                       color: Colors.deepOrange,
-                      onPressed: () {
-                        appState.remove(favorito);
-                      },
+                      onPressed: () {},
                     ),
                   ),
               ],
@@ -246,8 +226,23 @@ class MyCustomForm extends StatefulWidget {
 
 // Create a corresponding State class.
 // This class holds data related to the form.
-class MyCustomFormState extends State<MyCustomForm> {
+class MyCustomFormState extends State<MyCustomForm>
+    with SingleTickerProviderStateMixin {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  String name = '';
+  String local = '';
+  String placas = '';
+  String inversor = '';
+  String garantiaPlacas = '';
+  String garantiaInversor = '';
+  double? consumo;
+  double? preco;
+  double geracao = 0;
+  double fatorSolar = 0;
+  double kwp = 0;
+
+  List<double> n = [1, 2, 3, 4, 5, 6, 7];
 
   @override
   Widget build(BuildContext context) {
@@ -266,6 +261,9 @@ class MyCustomFormState extends State<MyCustomForm> {
                     border: UnderlineInputBorder(),
                     labelText: 'Nome Completo',
                   ),
+                  onChanged: (value) {
+                    name = value;
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Campo deve ser preenchido';
@@ -282,6 +280,9 @@ class MyCustomFormState extends State<MyCustomForm> {
                     border: UnderlineInputBorder(),
                     labelText: 'Consumo Mensal',
                   ),
+                  onChanged: (value) {
+                    consumo = double.tryParse(value);
+                  },
                   validator: (value) {
                     if (value == null ||
                         value.isEmpty ||
@@ -300,6 +301,9 @@ class MyCustomFormState extends State<MyCustomForm> {
                     border: UnderlineInputBorder(),
                     labelText: 'Localização',
                   ),
+                  onChanged: (value) {
+                    local = value;
+                  },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Campo deve ser preenchido';
@@ -317,6 +321,9 @@ class MyCustomFormState extends State<MyCustomForm> {
                     labelText: 'Preço',
                     helperText: "Ex: 11250.89",
                   ),
+                  onChanged: (value) {
+                    preco = double.tryParse(value);
+                  },
                   validator: (value) {
                     if (value != null && double.tryParse(value) == null) {
                       return 'Digite apenas numeros. Ex: 13245.23';
@@ -334,6 +341,9 @@ class MyCustomFormState extends State<MyCustomForm> {
                     labelText: 'Inversor',
                     helperText: "Ex: 2x Solplanet 30k-TL-G3",
                   ),
+                  onChanged: (value) {
+                    inversor = value;
+                  },
                 ),
               ),
               Padding(
@@ -345,6 +355,47 @@ class MyCustomFormState extends State<MyCustomForm> {
                     labelText: 'Modulos:',
                     helperText: "Ex: Quantidade,Potência,Marca",
                   ),
+                  onChanged: (value) {
+                    placas = value;
+                  },
+                  validator: (value) {
+                    RegExp padrao = RegExp(r'^(\d+)\s*,\s*(\d+)\s*,\s*(\w+)$');
+
+                    if (!(value == null || value.isEmpty) &&
+                        !padrao.hasMatch(value)) {
+                      return 'Fora do padrão [N° placas], [Potência], [Marca]';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 25, vertical: 6),
+                child: TextFormField(
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'Garantia Inversor:',
+                    helperText: "Ex: 30 Anos",
+                  ),
+                  onChanged: (value) {
+                    inversor = value;
+                  },
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 25, vertical: 6),
+                child: TextFormField(
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'Garantia dos Modulos:',
+                    helperText:
+                        "Ex: 25 Anos (Geração), 15 Anos (Defeito de Fabricação)",
+                  ),
+                  onChanged: (value) {
+                    inversor = value;
+                  },
                 ),
               ),
               Center(
@@ -354,12 +405,24 @@ class MyCustomFormState extends State<MyCustomForm> {
                     children: [
                       ElevatedButton.icon(
                         onPressed: () {
-                          // Validate returns true if the form is valid, or false otherwise.
                           if (_formKey.currentState!.validate()) {
-                            // If the form is valid, display a snackbar. In the real world,
-                            // you'd often call a server or save the information in a database.
+                            kwp = calculeKwp(placas);
+                            print(kwp);
+                            generatePDF(
+                                name,
+                                local,
+                                kwp,
+                                consumo,
+                                geracao,
+                                fatorSolar,
+                                preco,
+                                garantiaPlacas,
+                                garantiaInversor,
+                                placas,
+                                inversor,
+                                n);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Processing Data')),
+                              const SnackBar(content: Text('Documento Criado')),
                             );
                           }
                         },
@@ -372,7 +435,7 @@ class MyCustomFormState extends State<MyCustomForm> {
                     ],
                   ),
                 ),
-              ),
+              )
             ],
           ),
         ),
