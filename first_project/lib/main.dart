@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:printing/printing.dart';
 import 'PDFs/document.dart';
+import 'package:Urbansol_App/fatorSolar.dart';
 
 void main() {
   // Informa ao Flutter para executar o app definido em MyApp.
@@ -32,7 +33,18 @@ class MyApp extends StatelessWidget {
 
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
-  var favorites = <WordPair>[];
+  double? valor;
+  double? gastosExtras = 1500;
+  double? numModulos;
+  String name = '';
+  String local = '';
+  String placas = '';
+  String inversor = '';
+  String garantiaPlacas = '';
+  String garantiaInversor = '';
+  double? consumo;
+  double? preco;
+  // var favorites = <WordPair>[];
 
   void _showPrintedToast(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -70,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
         page = const MyCustomForm();
         break;
       case 1:
-        page = const MyCustomForm();
+        page = const Calculator();
         break;
       default:
         throw UnimplementedError('no widget for $selectedIndex');
@@ -81,7 +93,7 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             SafeArea(
               child: NavigationRail(
-                indicatorColor: const Color.fromARGB(255, 255, 178, 102),
+                indicatorColor: const Color.fromARGB(100, 255, 179, 91),
                 extended: constraints.maxWidth >= 600,
                 destinations: const [
                   NavigationRailDestination(
@@ -92,9 +104,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
                   NavigationRailDestination(
-                    icon: Icon(Icons.build),
+                    icon: Icon(Icons.calculate),
                     label: Text(
-                      'teste',
+                      'Calculadora',
                       textScaleFactor: 1.3,
                     ),
                   ),
@@ -109,7 +121,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Expanded(
               child: Container(
-                color: Color.fromARGB(100, 255, 178, 102),
+                color: Color.fromARGB(171, 248, 215, 178),
                 child: page,
               ),
             ),
@@ -120,91 +132,334 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class GeneratorPage extends StatelessWidget {
-  const GeneratorPage({super.key});
+// class GeneratorPage extends StatelessWidget {
+//   const GeneratorPage({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     const appTitle = 'Form Styling Demo';
+
+//     var appState = context.watch<MyAppState>();
+//     var pair = appState.current;
+//     IconData icon;
+//     if (appState.favorites.contains(pair)) {
+//       icon = Icons.favorite;
+//     } else {
+//       icon = Icons.favorite_border;
+//     }
+
+//     return Center(
+//       child: Column(
+//         mainAxisAlignment: MainAxisAlignment.center,
+//         children: [
+//           const SizedBox(height: 10),
+//           Row(
+//             mainAxisSize: MainAxisSize.min,
+//             children: [
+//               ElevatedButton.icon(
+//                 onPressed: () {},
+//                 style: TextButton.styleFrom(
+//                   foregroundColor: Colors.deepOrange,
+//                 ),
+//                 icon: Icon(icon),
+//                 label: const Text('Like'),
+//               ),
+//               const SizedBox(width: 10),
+//               ElevatedButton.icon(
+//                 onPressed: () {},
+//                 style: TextButton.styleFrom(
+//                   foregroundColor: Colors.deepOrange,
+//                 ),
+//                 icon: const Icon(Icons.navigate_next),
+//                 label: const Text('Next'),
+//               ),
+//             ],
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+class Calculator extends StatefulWidget {
+  const Calculator({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    const appTitle = 'Form Styling Demo';
-
-    var appState = context.watch<MyAppState>();
-    var pair = appState.current;
-    IconData icon;
-    if (appState.favorites.contains(pair)) {
-      icon = Icons.favorite;
-    } else {
-      icon = Icons.favorite_border;
-    }
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(height: 10),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ElevatedButton.icon(
-                onPressed: () {},
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.deepOrange,
-                ),
-                icon: Icon(icon),
-                label: const Text('Like'),
-              ),
-              const SizedBox(width: 10),
-              ElevatedButton.icon(
-                onPressed: () {},
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.deepOrange,
-                ),
-                icon: const Icon(Icons.navigate_next),
-                label: const Text('Next'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+  CalculatorState createState() {
+    return CalculatorState();
   }
 }
 
-class Favorite extends StatelessWidget {
-  const Favorite({super.key});
+class CalculatorState extends State<Calculator>
+    with SingleTickerProviderStateMixin {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  double? valor = 0;
+  double? numModulos = 0;
+  double valorInstalacao = 0;
+  String valorInstalacaoFormat = '';
+  double lucro = 0;
+  double valorVenda = 0;
+  double? gastosExtras = 0;
+  double totalGastos = 0;
+  double gastosTotais = 0;
+  double lucroVendedor = 0;
+
+  void update() {
+    // Atualize o valorInstalacaoFormat conforme necessário]
+    if (valor != null && numModulos != null) {
+      List<double> result = calGastos(numModulos!, gastosExtras, valor!);
+      lucro = result[0];
+      lucroVendedor = result[1];
+      valorVenda = result[2];
+      gastosTotais = result[3];
+
+      var myAppState = Provider.of<MyAppState>(context, listen: false);
+      myAppState.numModulos = numModulos;
+      myAppState.valor = valor;
+      myAppState.gastosExtras = gastosExtras;
+
+      setState(
+          () {}); // Notifique o Flutter para redesenhar a interface do usuário
+    }
+  }
+
+  void initState() {
+    super.initState();
+    var myAppState = Provider.of<MyAppState>(context, listen: false);
+    numModulos = myAppState.numModulos;
+    valor = myAppState.valor;
+    gastosExtras = myAppState.gastosExtras;
+    update();
+  }
 
   @override
   Widget build(BuildContext context) {
-    var favorites = context.watch<MyAppState>().favorites;
-    var appState = context.watch<MyAppState>();
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(30),
-            child: Text('You have '
-                '${appState.favorites.length} favorites:'),
-          ),
-          Expanded(
-            child: GridView(
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 400,
-                childAspectRatio: 400 / 80,
-              ),
-              children: [
-                for (var favorito in favorites)
-                  ListTile(
-                    title: Text("$favorito"),
-                    leading: IconButton(
-                      icon: const Icon(
-                        Icons.delete_outline,
-                        semanticLabel: 'Delete',
-                      ),
-                      color: Colors.deepOrange,
-                      onPressed: () {},
-                    ),
+          Form(
+            key: _formKey,
+            child: Column(children: [
+              const Padding(padding: EdgeInsets.symmetric(vertical: 20)),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+                child: TextFormField(
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'Valor do Equipamento',
                   ),
+                  initialValue: valor?.toString(), // Define o valor inicial
+                  onChanged: (value) {
+                    var myAppState = valor = double.tryParse(value);
+                    if (_formKey.currentState!.validate()) {
+                      update(); // Atualize o valorInstalacaoFormat
+                    }
+                  },
+                  validator: (value) {
+                    if (double.tryParse(value!) == null) {
+                      return 'Campo deve ser preenchido apenas com numeros';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+                child: TextFormField(
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'Numero de Modulos:',
+                  ),
+                  initialValue: numModulos?.toString(),
+                  onChanged: (value) {
+                    numModulos = double.tryParse(value);
+                    if (_formKey.currentState!.validate()) {
+                      update(); // Atualize o valorInstalacaoFormat
+                    } // Atualize o valorInstalacaoFormat
+                  },
+                  validator: (value) {
+                    if (double.tryParse(value!) == null) {
+                      return 'Campo deve ser preenchido apenas com numeros';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+                child: TextFormField(
+                  decoration: const InputDecoration(
+                    border: UnderlineInputBorder(),
+                    labelText: 'Gastos Extras:',
+                  ),
+                  initialValue: (gastosExtras!).toString(),
+                  onChanged: (value) {
+                    gastosExtras = double.tryParse(value);
+                    if (_formKey.currentState!.validate()) {
+                      update(); // Atualize o valorInstalacaoFormat
+                    } // Atualize o valorInstalacaoFormat
+                  },
+                  validator: (value) {
+                    if (double.tryParse(value!) == null) {
+                      return 'Campo deve ser preenchido apenas com numeros';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ]),
+          ),
+          const Padding(padding: EdgeInsets.symmetric(vertical: 20)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                RichText(
+                    text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: <TextSpan>[
+                    const TextSpan(
+                      text: 'Gastos com Instalação: ',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal,
+                          color: Colors.black),
+                    ),
+                    TextSpan(
+                      text: formatCurrency(valorInstalacao),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.red),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                RichText(
+                    text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: <TextSpan>[
+                    const TextSpan(
+                      text: 'Gastos extras: ',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal,
+                          color: Colors.black),
+                    ),
+                    TextSpan(
+                      text: formatCurrency(gastosExtras),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.red),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                RichText(
+                    text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: <TextSpan>[
+                    const TextSpan(
+                      text: 'Gasto Total: ',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal,
+                          color: Colors.black),
+                    ),
+                    TextSpan(
+                      text: formatCurrency(gastosTotais),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.red),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                RichText(
+                    text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: <TextSpan>[
+                    const TextSpan(
+                      text: 'Comissão Vendedor: ',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal,
+                          color: Colors.black),
+                    ),
+                    TextSpan(
+                      text: formatCurrency(lucroVendedor),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.red),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                RichText(
+                    text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: <TextSpan>[
+                    const TextSpan(
+                      text: 'Lucro Urbansol: ',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal,
+                          color: Colors.black),
+                    ),
+                    TextSpan(
+                      text: formatCurrency(lucro),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.green),
+                    ),
+                  ],
+                )),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                RichText(
+                    text: TextSpan(
+                  style: DefaultTextStyle.of(context).style,
+                  children: <TextSpan>[
+                    const TextSpan(
+                      text: 'Valor de venda: ',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.normal,
+                          color: Colors.black),
+                    ),
+                    TextSpan(
+                      text: formatCurrency(valorVenda),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.green),
+                    ),
+                  ],
+                )),
               ],
             ),
           )
@@ -229,7 +484,6 @@ class MyCustomForm extends StatefulWidget {
 class MyCustomFormState extends State<MyCustomForm>
     with SingleTickerProviderStateMixin {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
   String name = '';
   String local = '';
   String placas = '';
@@ -239,10 +493,21 @@ class MyCustomFormState extends State<MyCustomForm>
   double? consumo;
   double? preco;
   double geracao = 0;
-  double fatorSolar = 0;
+  double? fatorSolar = 0;
   double kwp = 0;
 
-  List<double> n = [1, 2, 3, 4, 5, 6, 7];
+  void initState() {
+    super.initState();
+    var myAppState = Provider.of<MyAppState>(context, listen: false);
+    name = myAppState.name;
+    local = myAppState.local;
+    placas = myAppState.placas;
+    inversor = myAppState.inversor;
+    garantiaPlacas = myAppState.garantiaPlacas;
+    garantiaInversor = myAppState.garantiaInversor;
+    consumo = myAppState.consumo;
+    preco = myAppState.preco;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -253,6 +518,7 @@ class MyCustomFormState extends State<MyCustomForm>
           key: _formKey,
           child: Column(
             children: [
+              const Padding(padding: EdgeInsets.symmetric(vertical: 20)),
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
@@ -261,8 +527,12 @@ class MyCustomFormState extends State<MyCustomForm>
                     border: UnderlineInputBorder(),
                     labelText: 'Nome Completo',
                   ),
+                  initialValue: name,
                   onChanged: (value) {
                     name = value;
+                    var myAppState =
+                        Provider.of<MyAppState>(context, listen: false);
+                    myAppState.name = name;
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -280,8 +550,12 @@ class MyCustomFormState extends State<MyCustomForm>
                     border: UnderlineInputBorder(),
                     labelText: 'Consumo Mensal',
                   ),
+                  initialValue: consumo?.toString(),
                   onChanged: (value) {
                     consumo = double.tryParse(value);
+                    var myAppState =
+                        Provider.of<MyAppState>(context, listen: false);
+                    myAppState.consumo = consumo;
                   },
                   validator: (value) {
                     if (value == null ||
@@ -301,8 +575,12 @@ class MyCustomFormState extends State<MyCustomForm>
                     border: UnderlineInputBorder(),
                     labelText: 'Localização',
                   ),
+                  initialValue: local,
                   onChanged: (value) {
                     local = value;
+                    var myAppState =
+                        Provider.of<MyAppState>(context, listen: false);
+                    myAppState.local = local;
                   },
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -321,8 +599,12 @@ class MyCustomFormState extends State<MyCustomForm>
                     labelText: 'Preço',
                     helperText: "Ex: 11250.89",
                   ),
+                  initialValue: preco?.toString(),
                   onChanged: (value) {
                     preco = double.tryParse(value);
+                    var myAppState =
+                        Provider.of<MyAppState>(context, listen: false);
+                    myAppState.preco = preco;
                   },
                   validator: (value) {
                     if (value != null && double.tryParse(value) == null) {
@@ -341,8 +623,12 @@ class MyCustomFormState extends State<MyCustomForm>
                     labelText: 'Inversor',
                     helperText: "Ex: 2x Solplanet 30k-TL-G3",
                   ),
+                  initialValue: inversor,
                   onChanged: (value) {
                     inversor = value;
+                    var myAppState =
+                        Provider.of<MyAppState>(context, listen: false);
+                    myAppState.inversor = inversor;
                   },
                 ),
               ),
@@ -355,8 +641,12 @@ class MyCustomFormState extends State<MyCustomForm>
                     labelText: 'Modulos:',
                     helperText: "Ex: Quantidade,Potência,Marca",
                   ),
+                  initialValue: placas,
                   onChanged: (value) {
                     placas = value;
+                    var myAppState =
+                        Provider.of<MyAppState>(context, listen: false);
+                    myAppState.placas = placas;
                   },
                   validator: (value) {
                     RegExp padrao = RegExp(r'^(\d+)\s*,\s*(\d+)\s*,\s*(\w+)$');
@@ -378,8 +668,12 @@ class MyCustomFormState extends State<MyCustomForm>
                     labelText: 'Garantia Inversor:',
                     helperText: "Ex: 30 Anos",
                   ),
+                  initialValue: garantiaInversor,
                   onChanged: (value) {
-                    inversor = value;
+                    garantiaInversor = value;
+                    var myAppState =
+                        Provider.of<MyAppState>(context, listen: false);
+                    myAppState.garantiaInversor = garantiaInversor;
                   },
                 ),
               ),
@@ -393,8 +687,12 @@ class MyCustomFormState extends State<MyCustomForm>
                     helperText:
                         "Ex: 25 Anos (Geração), 15 Anos (Defeito de Fabricação)",
                   ),
+                  initialValue: garantiaPlacas,
                   onChanged: (value) {
-                    inversor = value;
+                    garantiaPlacas = value;
+                    var myAppState =
+                        Provider.of<MyAppState>(context, listen: false);
+                    myAppState.garantiaPlacas = garantiaPlacas;
                   },
                 ),
               ),
@@ -406,21 +704,50 @@ class MyCustomFormState extends State<MyCustomForm>
                       ElevatedButton.icon(
                         onPressed: () {
                           if (_formKey.currentState!.validate()) {
+                            // Tratamento dos dados
                             kwp = calculeKwp(placas);
-                            print(kwp);
+
+                            List<String> resultado = calFatorSolar(local);
+                            local = resultado[0];
+                            fatorSolar = double.tryParse(resultado[1]);
+
+                            // CAlculando Geração
+                            geracao = fatorSolar! * 0.9 / 12 * kwp;
+
+                            var garantias = gerarGarantias(
+                                garantiaPlacas, garantiaInversor);
+                            garantiaPlacas = garantias[0];
+                            garantiaInversor = garantias[1];
+
+                            String placasFormatadas = formatPlacas(placas);
+
+                            if (inversor == ' ' ||
+                                inversor.isEmpty ||
+                                inversor == '' ||
+                                inversor == null) {
+                              inversor =
+                                  'Solplanet / Hoymiles / Canadian / Growatt / ...';
+                            }
+
+                            List<double> result = valorPagar(geracao);
+                            double valorAntes = result[0];
+                            double valorDepois = result[1];
+                            double valorEconomiaAnual = result[2];
+
                             generatePDF(
                                 name,
                                 local,
                                 kwp,
                                 consumo,
                                 geracao,
-                                fatorSolar,
                                 preco,
                                 garantiaPlacas,
                                 garantiaInversor,
-                                placas,
+                                placasFormatadas,
                                 inversor,
-                                n);
+                                valorAntes,
+                                valorDepois,
+                                valorEconomiaAnual);
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Documento Criado')),
                             );

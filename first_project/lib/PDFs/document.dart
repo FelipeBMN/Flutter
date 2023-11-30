@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
@@ -6,22 +5,23 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:open_file/open_file.dart';
 import 'package:share/share.dart';
-import 'package:intl/intl.dart';
 import 'package:Urbansol_App/funcoes.dart';
 
 Future<void> generatePDF(
-    String name,
-    String local,
-    double kWp,
-    double? consumo,
-    double geracao,
-    double fatorSolar,
-    double? preco,
-    String garantiaModulos,
-    String garantiaInversor,
-    String placas,
-    String inversor,
-    List<double> n) async {
+  String name,
+  String local,
+  double kWp,
+  double? consumo,
+  double geracao,
+  double? preco,
+  String garantiaModulos,
+  String garantiaInversor,
+  String placas,
+  String inversor,
+  double valorAntes,
+  double valorDepois,
+  double valorEconomiaAnual,
+) async {
   final pdf = pw.Document();
   final fontData = await rootBundle.load('fonts/Arial.ttf');
   final ttf = pw.Font.ttf(fontData.buffer.asByteData());
@@ -62,36 +62,8 @@ Future<void> generatePDF(
     (await rootBundle.load('imgs/p8.jpg')).buffer.asUint8List(),
   );
 
-  String formatCurrency(double? value) {
-    final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
-    return formatter.format(value);
-  }
-
-  String formatKWP(double? power) {
-    final KWP = NumberFormat('#,##0.0', 'pt_BR');
-    return '${KWP.format(power)} kWp';
-  }
-
-  String formatKWH(double? power) {
-    final KWH = NumberFormat('#,##0.0', 'pt_BR');
-    return '${KWH.format(power)} kWh';
-  }
-
-  // Tratando os Dados
-
-  if (inversor == ' ' ||
-      inversor.isEmpty ||
-      inversor == '' ||
-      inversor == null) {
-    inversor = 'Solplanet / Hoymiles / Canadian / Growatt / ...';
-  }
-
-
-  String placasFormatadas = formatPlacas(placas);
-
-  var garantias = gerarGarantias(garantiaModulos, garantiaInversor);
-  garantiaModulos = garantias[0];
-  garantiaInversor = garantias[1];
+  // calculando lista de valores n para o grafico de lucro
+  List<double> n = calculaN(valorEconomiaAnual);
 
   // Capa
   pdf.addPage(
@@ -391,135 +363,114 @@ Future<void> generatePDF(
         buildBackground: (context) => pw.Image(image5, fit: pw.BoxFit.fill),
       ),
       build: (pw.Context context) {
-        return pw.Padding(
-          padding: const pw.EdgeInsets.only(
-            // left: -220,
-            top: 200,
-            left: 70,
-          ),
-          child: pw.Center(
-              child: pw.Row(children: [
-            pw.Column(
-              children: [
-                pw.Align(
-                  alignment:
-                      pw.Alignment.centerLeft, // Ajuste para a posição desejada
-                  child: pw.RichText(
-                    textAlign: pw.TextAlign.left,
-                    text: pw.TextSpan(
-                      text: formatKWP(kWp),
-                      style: pw.TextStyle(
-                          fontSize: 20, font: boldTtf, color: PdfColors.white),
-                    ),
+        return pw.Stack(
+          children: [
+            pw.Positioned(
+              left: 63, // Ajuste a posição horizontal desejada
+              top: 195, // Ajuste a posição vertical desejada
+              child: pw.RichText(
+                textAlign: pw.TextAlign.center,
+                text: pw.TextSpan(
+                  text: formatKWP(kWp),
+                  style: pw.TextStyle(
+                    fontSize: 20,
+                    font: boldTtf,
+                    color: PdfColors.white,
                   ),
                 ),
-                pw.Padding(padding: const pw.EdgeInsets.only(top: 160)),
-                pw.Align(
-                  alignment:
-                      pw.Alignment.centerLeft, // Ajuste para a posição desejada
-                  child: pw.RichText(
-                    textAlign: pw.TextAlign.left,
-                    text: pw.TextSpan(
-                      text: formatCurrency(1200),
-                      style: pw.TextStyle(
-                          fontSize: 20, font: boldTtf, color: PdfColors.white),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-            pw.Padding(padding: const pw.EdgeInsets.only(left: 67)),
-            pw.Column(
-              children: [
-                pw.Padding(
-                  padding: const pw.EdgeInsets.only(left: -15),
-                  child: pw.Align(
-                    alignment: pw
-                        .Alignment.centerLeft, // Ajuste para a posição desejada
-                    child: pw.RichText(
-                      textAlign: pw.TextAlign.left,
-                      text: pw.TextSpan(
-                        text: formatKWH(consumo),
-                        style: pw.TextStyle(
-                            fontSize: 20,
-                            font: boldTtf,
-                            color: PdfColors.white),
-                      ),
-                    ),
+            pw.Positioned(
+              left: 65, // Ajuste a posição horizontal desejada
+              top: 377, // Ajuste a posição vertical desejada
+              child: pw.RichText(
+                textAlign: pw.TextAlign.center,
+                text: pw.TextSpan(
+                  text: formatCurrency(valorAntes),
+                  style: pw.TextStyle(
+                    fontSize: 20,
+                    font: boldTtf,
+                    color: PdfColors.white,
                   ),
                 ),
-                pw.Padding(padding: const pw.EdgeInsets.only(top: 160)),
-                pw.Align(
-                  alignment:
-                      pw.Alignment.centerLeft, // Ajuste para a posição desejada
-                  child: pw.RichText(
-                    textAlign: pw.TextAlign.left,
-                    text: pw.TextSpan(
-                      text: formatCurrency(1200),
-                      style: pw.TextStyle(
-                          fontSize: 20, font: boldTtf, color: PdfColors.white),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-            pw.Padding(padding: const pw.EdgeInsets.only(left: 67)),
-            pw.Column(
-              children: [
-                pw.Padding(
-                  padding: const pw.EdgeInsets.only(left: -15),
-                  child: pw.Align(
-                    alignment: pw
-                        .Alignment.centerLeft, // Ajuste para a posição desejada
-                    child: pw.RichText(
-                      textAlign: pw.TextAlign.left,
-                      text: pw.TextSpan(
-                        text: formatKWH(geracao),
-                        style: pw.TextStyle(
-                            fontSize: 20,
-                            font: boldTtf,
-                            color: PdfColors.white),
-                      ),
-                    ),
+            pw.Positioned(
+              left: 235, // Ajuste a posição horizontal desejada
+              top: 195, // Ajuste a posição vertical desejada
+              child: pw.RichText(
+                textAlign: pw.TextAlign.left,
+                text: pw.TextSpan(
+                  text: formatKWH(consumo),
+                  style: pw.TextStyle(
+                    fontSize: 20,
+                    font: boldTtf,
+                    color: PdfColors.white,
                   ),
                 ),
-                pw.Padding(padding: const pw.EdgeInsets.only(top: 160)),
-                pw.Align(
-                  alignment:
-                      pw.Alignment.centerLeft, // Ajuste para a posição desejada
-                  child: pw.RichText(
-                    textAlign: pw.TextAlign.left,
-                    text: pw.TextSpan(
-                      text: formatCurrency(1200),
-                      style: pw.TextStyle(
-                          fontSize: 20, font: boldTtf, color: PdfColors.white),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
-            pw.Row(
-              children: [
-                pw.Padding(
-                  padding: const pw.EdgeInsets.only(left: -240, top: -49),
-                  child: pw.Align(
-                    alignment: pw
-                        .Alignment.centerLeft, // Ajuste para a posição desejada
-                    child: pw.RichText(
-                      textAlign: pw.TextAlign.left,
-                      text: pw.TextSpan(
-                        text: formatCurrency(preco),
-                        style: pw.TextStyle(
-                            fontSize: 30,
-                            font: boldTtf,
-                            color: PdfColors.green300),
-                      ),
-                    ),
+            pw.Positioned(
+              left: 242, // Ajuste a posição horizontal desejada
+              top: 377, // Ajuste a posição vertical desejada
+              child: pw.RichText(
+                textAlign: pw.TextAlign.left,
+                text: pw.TextSpan(
+                  text: formatCurrency(valorDepois),
+                  style: pw.TextStyle(
+                    fontSize: 20,
+                    font: boldTtf,
+                    color: PdfColors.white,
                   ),
                 ),
-              ],
+              ),
             ),
-          ])),
+            pw.Positioned(
+              left: 407, // Ajuste a posição horizontal desejada
+              top: 195, // Ajuste a posição vertical desejada
+              child: pw.RichText(
+                textAlign: pw.TextAlign.left,
+                text: pw.TextSpan(
+                  text: formatKWH(geracao),
+                  style: pw.TextStyle(
+                    fontSize: 20,
+                    font: boldTtf,
+                    color: PdfColors.white,
+                  ),
+                ),
+              ),
+            ),
+            pw.Positioned(
+              left: 413, // Ajuste a posição horizontal desejada
+              top: 377, // Ajuste a posição vertical desejada
+              child: pw.RichText(
+                textAlign: pw.TextAlign.left,
+                text: pw.TextSpan(
+                  text: formatCurrency(valorEconomiaAnual),
+                  style: pw.TextStyle(
+                    fontSize: 20,
+                    font: boldTtf,
+                    color: PdfColors.white,
+                  ),
+                ),
+              ),
+            ),
+            pw.Positioned(
+              left: 300, // Ajuste a posição horizontal desejada
+              top: 482.5, // Ajuste a posição vertical desejada
+              child: pw.RichText(
+                textAlign: pw.TextAlign.left,
+                text: pw.TextSpan(
+                  text: formatCurrency(preco),
+                  style: pw.TextStyle(
+                    fontSize: 27,
+                    font: boldTtf,
+                    color: PdfColors.green300,
+                  ),
+                ),
+              ),
+            ),
+          ],
         );
       },
     ),
@@ -554,7 +505,7 @@ Future<void> generatePDF(
                   child: pw.RichText(
                     textAlign: pw.TextAlign.left,
                     text: pw.TextSpan(
-                      text: placasFormatadas,
+                      text: placas,
                       style: pw.TextStyle(
                           fontSize: 10, font: ttf, color: PdfColors.black),
                     ),
@@ -651,7 +602,8 @@ Future<void> generatePDF(
   );
 
   final output = await getApplicationDocumentsDirectory();
-  final pdfFile = File('${output.path}/example.pdf');
+  final pdfFile =
+      File('${output.path}/Orçamento ${(geracao.round()).toString()}.pdf');
   await pdfFile.writeAsBytes(await pdf.save());
 
   // Compartilhe o PDF
